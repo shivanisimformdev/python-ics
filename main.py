@@ -17,6 +17,7 @@ class OrganizeEvent:
             "testing.a@mailinator.com",
             "testing.b@mailinator.com"
         ]
+        self.send_reminder_before = 15  # in minutes
 
     def event_getter(self):
         return {
@@ -25,6 +26,7 @@ class OrganizeEvent:
             "start_time": self.start_time,
             "end_time": self.end_time,
             "attendee_emails": self.attendee_emails,
+            "send_reminder_before": self.send_reminder_before
         }
 
 

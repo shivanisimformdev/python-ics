@@ -2,7 +2,7 @@ import email
 from email.mime.base import MIMEBase
 import uuid
 
-from icalendar import Calendar, Event
+from icalendar import Calendar, Event, Alarm
 from decouple import config
 
 
@@ -16,6 +16,7 @@ class ICSGenerator:
         self.cal = Calendar()
         self.event = Event()
         self.event_info = event_info
+        self.send_reminder_before = event_info.get("send_reminder_before", 15)
 
     @property
     def calendar_dict(self):
@@ -41,9 +42,31 @@ class ICSGenerator:
         for key, value in cal_data.items():
             component.add(key, value)
 
+    def set_alarm(self, event):
+        """
+        Set a Reminder Alarm before the meeting.
+        """
+        alarm = Alarm()
+        alarm.add("action", "DISPLAY")
+        alarm.add("description", "Reminder")
+        if self.send_reminder_before in [0, 5, 15, 30]:
+            alarm.add("TRIGGER;RELATED=START", "-PT{0}M".format(self.send_reminder_before))
+        if self.send_reminder_before == 60:
+            alarm.add("TRIGGER;RELATED=START", "-PT1H")
+        if self.send_reminder_before == 120:
+            alarm.add("TRIGGER;RELATED=START", "-PT2H")
+        if self.send_reminder_before == 720:
+            alarm.add("TRIGGER;RELATED=START", "-PT12H")
+        if self.send_reminder_before == 1440:
+            alarm.add("TRIGGER;RELATED=START", "-P1D")
+        if self.send_reminder_before == 10080:
+            alarm.add("TRIGGER;RELATED=START", "-P1W")
+        event.add_component(alarm)
+
     def set_ics_data(self):
         self._add(self.cal, self.calendar_dict)
         self._add(self.event, self.event_dict)
+        self.set_alarm(self.event)
         self.cal.add_component(self.event)
 
     def get_ics_content(self):
